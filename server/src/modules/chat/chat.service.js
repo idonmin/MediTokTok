@@ -14,6 +14,38 @@ export async function listConversations(userId) {
   return data || [];
 }
 
+export async function createConversation(userId) {
+  const database = requireDatabase();
+  const { data, error } = await database
+    .from('chat_rooms')
+    .insert({
+      user_id: userId,
+      title: '새 채팅방',
+    })
+    .select('id,title,created_at,updated_at')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteConversation(userId, conversationId) {
+  const database = requireDatabase();
+  const { data, error } = await database
+    .from('chat_rooms')
+    .delete()
+    .eq('id', conversationId)
+    .eq('user_id', userId)
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    const notFoundError = new Error('채팅방을 찾을 수 없습니다.');
+    notFoundError.status = 404;
+    throw notFoundError;
+  }
+  return data;
+}
+
 export async function loadConversation(userId, conversationId) {
   const database = requireDatabase();
   const { data, error } = await database
@@ -31,7 +63,7 @@ export async function ensureConversation(userId, conversationId, firstMessage) {
   const database = requireDatabase();
   const { data: existing, error: selectError } = await database
     .from('chat_rooms')
-    .select('user_id')
+    .select('user_id,title')
     .eq('id', conversationId)
     .maybeSingle();
   if (selectError) throw selectError;
@@ -40,7 +72,18 @@ export async function ensureConversation(userId, conversationId, firstMessage) {
     error.status = 404;
     throw error;
   }
-  if (existing) return;
+  if (existing) {
+    if (existing.title === '새 대화' || existing.title === '새 채팅방') {
+      const title = firstMessage.replace(/\s+/g, ' ').trim().slice(0, 60) || '새 채팅방';
+      const { error: updateError } = await database
+        .from('chat_rooms')
+        .update({ title })
+        .eq('id', conversationId)
+        .eq('user_id', userId);
+      if (updateError) throw updateError;
+    }
+    return;
+  }
 
   const title = firstMessage.replace(/\s+/g, ' ').trim().slice(0, 60) || '새 대화';
   const { error } = await database.from('chat_rooms').insert({
