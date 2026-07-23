@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Plus, Send, Trash2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { BrandMark } from '../../components/BrandMark.jsx';
 import {
   createConversation,
@@ -15,7 +16,19 @@ const greeting = {
   content: '안녕하세요. 저장된 PubMed 논문에 대해 질문해 주세요.',
 };
 
+function greetingFor(conversation) {
+  if (conversation?.title?.startsWith('선택 논문 ')) {
+    return {
+      id: 'greeting',
+      role: 'assistant',
+      content: `${conversation.title} 채팅방입니다. 선택한 논문의 내용에 대해 질문해 주세요.`,
+    };
+  }
+  return greeting;
+}
+
 export function ChatPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [conversationId, setConversationId] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([greeting]);
@@ -25,6 +38,7 @@ export function ChatPage() {
   const messageListRef = useRef(null);
   const roomMenuRef = useRef(null);
   const stickToBottomRef = useRef(true);
+  const initialRoomIdRef = useRef(searchParams.get('room'));
 
   useEffect(() => {
     let active = true;
@@ -33,12 +47,13 @@ export function ChatPage() {
         const { items } = await getConversations();
         if (!active) return;
         setConversations(items || []);
-        const latest = items?.[0];
-        if (!latest) return;
-        const result = await getConversationMessages(latest.id);
+        const requested = items?.find((item) => item.id === initialRoomIdRef.current);
+        const targetConversation = requested || items?.[0];
+        if (!targetConversation) return;
+        const result = await getConversationMessages(targetConversation.id);
         if (!active) return;
-        setConversationId(latest.id);
-        setMessages(result.items?.length ? result.items : [greeting]);
+        setConversationId(targetConversation.id);
+        setMessages(result.items?.length ? result.items : [greetingFor(targetConversation)]);
       } catch (error) {
         if (active) setStatus(error.message);
       } finally {
@@ -94,7 +109,8 @@ export function ChatPage() {
     try {
       const result = await getConversationMessages(conversation.id);
       setConversationId(conversation.id);
-      setMessages(result.items?.length ? result.items : [greeting]);
+      setMessages(result.items?.length ? result.items : [greetingFor(conversation)]);
+      setSearchParams({ room: conversation.id }, { replace: true });
       stickToBottomRef.current = true;
       closeRoomMenu();
     } catch (error) {
@@ -112,7 +128,8 @@ export function ChatPage() {
       const conversation = await createConversation();
       setConversations((current) => [conversation, ...current]);
       setConversationId(conversation.id);
-      setMessages([greeting]);
+      setMessages([greetingFor(conversation)]);
+      setSearchParams({ room: conversation.id }, { replace: true });
       stickToBottomRef.current = true;
       closeRoomMenu();
     } catch (error) {
@@ -140,10 +157,12 @@ export function ChatPage() {
         if (nextConversation) {
           const result = await getConversationMessages(nextConversation.id);
           setConversationId(nextConversation.id);
-          setMessages(result.items?.length ? result.items : [greeting]);
+          setMessages(result.items?.length ? result.items : [greetingFor(nextConversation)]);
+          setSearchParams({ room: nextConversation.id }, { replace: true });
         } else {
           setConversationId(null);
           setMessages([greeting]);
+          setSearchParams({}, { replace: true });
         }
         stickToBottomRef.current = true;
       }
@@ -172,7 +191,10 @@ export function ChatPage() {
         conversationId,
         message,
         onEvent: (type, data) => {
-          if (type === 'meta') setConversationId(data.conversationId);
+          if (type === 'meta') {
+            setConversationId(data.conversationId);
+            setSearchParams({ room: data.conversationId }, { replace: true });
+          }
           if (type === 'token') {
             setMessages((current) => current.map((item) =>
               item.id === assistantId ? { ...item, content: item.content + data.token } : item,

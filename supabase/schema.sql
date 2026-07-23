@@ -46,6 +46,27 @@ create table public.chat_rooms (
   unique (id, user_id)
 );
 
+-- 선택 논문 전용 채팅방과 사용자 논문 컬렉션을 연결합니다.
+create table public.chat_room_papers (
+  room_id uuid not null,
+  user_id uuid not null,
+  pmid text not null,
+  created_at timestamptz not null default now(),
+  primary key (room_id, pmid),
+  constraint chat_room_papers_room_user_fk
+    foreign key (room_id, user_id)
+    references public.chat_rooms (id, user_id)
+    on delete cascade,
+  constraint chat_room_papers_pubmed_fk
+    foreign key (pmid)
+    references public.pubmed_records (pmid)
+    on delete cascade,
+  constraint chat_room_papers_collection_fk
+    foreign key (user_id, pmid)
+    references public.user_paper_collections (user_id, pmid)
+    on delete cascade
+);
+
 -- 사용자별 챗봇 메시지 기록.
 create table public.chat_messages (
   id uuid primary key default gen_random_uuid(),
@@ -70,6 +91,8 @@ create index user_paper_collections_pmid_idx
   on public.user_paper_collections(pmid);
 create index chat_rooms_user_updated_idx
   on public.chat_rooms(user_id, updated_at desc);
+create index chat_room_papers_user_room_idx
+  on public.chat_room_papers(user_id, room_id);
 create index chat_messages_room_created_idx
   on public.chat_messages(room_id, created_at);
 
@@ -228,10 +251,35 @@ create trigger touch_chat_room_after_message
 after insert on public.chat_messages
 for each row execute function public.touch_chat_room();
 
+-- 애플리케이션 검증 외에도 채팅방당 최대 5편을 보장합니다.
+create or replace function public.enforce_chat_room_paper_limit()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if (
+    select count(*)
+    from public.chat_room_papers
+    where room_id = new.room_id
+      and user_id = new.user_id
+  ) >= 5 then
+    raise exception '채팅방에는 최대 5편의 논문만 연결할 수 있습니다.';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger enforce_chat_room_paper_limit_before_insert
+before insert on public.chat_room_papers
+for each row execute function public.enforce_chat_room_paper_limit();
+
 alter table public.pubmed_records enable row level security;
 alter table public.user_profiles enable row level security;
 alter table public.user_paper_collections enable row level security;
 alter table public.chat_rooms enable row level security;
+alter table public.chat_room_papers enable row level security;
 alter table public.chat_messages enable row level security;
 
 create policy "authenticated users can read pubmed records"
@@ -267,6 +315,13 @@ to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
+create policy "users manage own chat room papers"
+on public.chat_room_papers
+for all
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
 create policy "users manage own chat messages"
 on public.chat_messages
 for all
@@ -281,12 +336,14 @@ grant select on public.user_profiles to authenticated;
 grant update (display_name, avatar_url) on public.user_profiles to authenticated;
 grant select, insert, delete on public.user_paper_collections to authenticated;
 grant select, insert, update, delete on public.chat_rooms to authenticated;
+grant select, insert, delete on public.chat_room_papers to authenticated;
 grant select, insert, update, delete on public.chat_messages to authenticated;
 
 grant all privileges on public.pubmed_records to service_role;
 grant all privileges on public.user_profiles to service_role;
 grant all privileges on public.user_paper_collections to service_role;
 grant all privileges on public.chat_rooms to service_role;
+grant all privileges on public.chat_room_papers to service_role;
 grant all privileges on public.chat_messages to service_role;
 
 commit;
