@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { BrandMark } from '../../components/BrandMark.jsx';
 import { ProfileMenu } from '../auth/ProfileMenu.jsx';
 import { useAuth } from '../auth/auth-context.js';
 
@@ -34,7 +35,10 @@ export function LandingPage() {
   return (
     <main className="landing-shell">
       <nav className="landing-nav" aria-label="메인 내비게이션">
-        <Link className="landing-brand" to="/">메디톡톡</Link>
+        <Link className="landing-brand" to="/">
+          <BrandMark />
+          <span>메디톡톡</span>
+        </Link>
         <div className="landing-nav-links">
           {navigation.map(({ to, label, icon: Icon }) => (
             <Link key={to} className="landing-nav-link" to={to}>
