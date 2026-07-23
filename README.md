@@ -36,25 +36,25 @@
 
 > 서비스 설명, 핵심 기능, 보호 페이지 내비게이션과 Google OAuth 진입점을 제공하는 Claymorphism 랜딩 페이지
 
-![메디톡톡 랜딩 페이지](./docs/screenshots/landing.jpg)
+![메디톡톡 랜딩 페이지](./docs/screenshots/landing.png)
 
 ### 2. 개요 대시보드
 
 > 2020~2026년에 걸친 실제 수집 데이터 79편을 기준으로 전체 논문·신규 저장·중복 Skip·저널 수와 연도별/저널별 차트
 
-![다년도 논문 데이터가 표시된 개요 대시보드](./docs/screenshots/overview.jpg)
+![다년도 논문 데이터가 표시된 개요 대시보드](./docs/screenshots/overview.png)
 
 ### 3. 논문 검색 및 필터
 
 > 제목·Abstract에 `vaccine`, 연도 범위에 `2020~2024`를 적용해 43건이 필터링
 
-![논문 검색 및 필터 화면](./docs/screenshots/papers.jpg)
+![논문 검색 및 필터 화면](./docs/screenshots/papers.png)
 
 ### 4. 연구 챗봇
 
 > 채팅방 선택, 대화 기록 복원, 스트리밍 응답 UI와 의료 안전 안내를 제공
 
-![메디톡톡 연구 챗봇 화면](./docs/screenshots/chat.jpg)
+![메디톡톡 연구 챗봇 화면](./docs/screenshots/chat.png)
 
 ## 주요 기능
 
@@ -163,6 +163,7 @@ MidiTokTok/
 │       │   └── papers/             # 검색, 표, CSV, 논문 선택
 │       ├── lib/                    # API·Supabase 클라이언트
 │       └── styles/                 # 전역 Claymorphism 스타일
+│   └── vercel.json                 # Vercel SPA rewrite 설정
 ├── server/
 │   ├── src/
 │   │   ├── config/                 # 환경변수
@@ -359,29 +360,39 @@ npm run dev
 
 ## 배포
 
-클라이언트와 API 서버를 분리 배포하는 구성을 기준으로 준비되어 있습니다.
+프론트엔드는 **Vercel**, 백엔드는 **Render**, 데이터베이스와 인증은 **Supabase**를 사용해 분리 배포했습니다.
 
-### Client
+- 배포 주소: [메디톡톡 바로가기](https://medi-tok-tok-client-ka1mfgbph-medi-tok-tok.vercel.app/)
 
-- Build command: `npm run build -w client`
-- Output: `client/dist`
+### Frontend - Vercel
+
+- Root Directory: `client`
+- Build command: `npm run build`
+- Output Directory: `dist`
+- SPA rewrite: `client/vercel.json`
 - 필수 환경변수: `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-- 모든 SPA 경로가 `/index.html`로 fallback되어야 합니다.
+- `VITE_API_URL`에는 Render에 배포한 API의 `/api` 주소를 설정합니다.
+- `vercel.json`이 모든 SPA 경로를 `/index.html`로 연결합니다.
 
-### Server
+### Backend - Render
 
+- Build command: `npm install`
 - Start command: `npm run start -w server`
 - Health check: `/api/health`
-- `CLIENT_URL`을 배포된 클라이언트 origin으로 변경합니다.
-- service role, NCBI, OpenAI 키는 배포 플랫폼 Secret으로만 등록합니다.
+- `CLIENT_URL`에는 Vercel에 배포한 프론트엔드 origin을 설정합니다.
+- `SUPABASE_SERVICE_ROLE_KEY`, `NCBI_API_KEY`, `OPENAI_API_KEY`는 Render의 Secret 환경변수로 등록합니다.
+
+### Database / Auth - Supabase
+
+- PostgreSQL 스키마는 `supabase/schema.sql`을 적용합니다.
+- Google OAuth와 사용자별 RLS 정책을 Supabase에서 관리합니다.
+- Vercel에는 공개 가능한 Supabase URL과 anon key만 등록하고, service role key는 Render에서만 사용합니다.
 
 ### OAuth
 
-- Supabase Site URL을 배포된 클라이언트 주소로 변경합니다.
+- Supabase Site URL을 Vercel 프론트엔드 주소로 설정합니다.
 - `https://<client-domain>/auth/callback`을 Redirect URL에 추가합니다.
 - Google Cloud Console과 Supabase의 Authorized redirect URI를 일치시킵니다.
-
-현재 저장소에는 특정 호스팅 플랫폼 전용 설정 파일이 없습니다. 플랫폼 선정 후 `docs/deployment.md` 체크리스트를 기준으로 최종 배포를 진행하면 됩니다.
 
 ## 참고 문서
 
