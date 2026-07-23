@@ -1,6 +1,6 @@
 create extension if not exists pgcrypto;
 
-create table if not exists public.papers (
+create table if not exists public.pubmed_records (
   pmid text primary key,
   title text not null,
   abstract text not null default '',
@@ -41,16 +41,16 @@ create table if not exists public.chat_messages (
   created_at timestamptz not null default now()
 );
 
-create index if not exists papers_pub_year_idx on public.papers(pub_year);
-create index if not exists papers_journal_idx on public.papers(journal);
+create index if not exists pubmed_records_pub_year_idx on public.pubmed_records(pub_year);
+create index if not exists pubmed_records_journal_idx on public.pubmed_records(journal);
 create index if not exists chat_messages_conversation_idx on public.chat_messages(conversation_id, created_at);
 
-alter table public.papers enable row level security;
+alter table public.pubmed_records enable row level security;
 alter table public.collection_runs enable row level security;
 alter table public.chat_conversations enable row level security;
 alter table public.chat_messages enable row level security;
 
-create policy "authenticated users can read papers" on public.papers for select to authenticated using (true);
+create policy "authenticated users can read pubmed records" on public.pubmed_records for select to authenticated using (true);
 create policy "users can read own collection runs" on public.collection_runs for select to authenticated using (auth.uid() = user_id);
 create policy "users manage own conversations" on public.chat_conversations for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "users manage own messages" on public.chat_messages for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);

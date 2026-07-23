@@ -7,13 +7,13 @@ export async function collectAndSavePapers(conditions, userId) {
   const papers = await fetchPaperMetadata(pmids);
   if (!papers.length) return { found: 0, inserted: 0, skipped: 0 };
 
-  const { data: existing, error: selectError } = await database.from('papers').select('pmid').in('pmid', papers.map((paper) => paper.pmid));
+  const { data: existing, error: selectError } = await database.from('pubmed_records').select('pmid').in('pmid', papers.map((paper) => paper.pmid));
   if (selectError) throw selectError;
   const existingPmids = new Set((existing || []).map((paper) => paper.pmid));
   const newPapers = papers.filter((paper) => !existingPmids.has(paper.pmid)).map((paper) => ({ ...paper, collected_by: userId }));
 
   if (newPapers.length) {
-    const { error: insertError } = await database.from('papers').insert(newPapers);
+    const { error: insertError } = await database.from('pubmed_records').insert(newPapers);
     if (insertError) throw insertError;
   }
 

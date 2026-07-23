@@ -2,7 +2,7 @@
 
 ## 추천 역할 분배
 
-1. 수집 담당: 요구사항 1~2, PubMed API, `papers` 저장
+1. 수집 담당: 요구사항 1~2, PubMed API, `pubmed_records` 저장
 2. 대시보드 담당: 요구사항 3~4·6, 차트·필터·CSV
 3. 챗봇 담당: 요구사항 5·7·9, Memory·안전 필터·SSE
 4. 인증/배포 담당: 요구사항 8·10, Google OAuth·RLS·배포
