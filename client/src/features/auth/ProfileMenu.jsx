@@ -1,6 +1,28 @@
-import { CircleUserRound, LogIn, LogOut } from 'lucide-react';
+import { LogIn, LogOut } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useAuth } from './auth-context.js';
+
+function ClayAvatar({ compact = false }) {
+  return (
+    <span className={`clay-avatar${compact ? ' compact' : ''}`} aria-hidden="true">
+      <span className="clay-avatar-hair" />
+      <span className="clay-avatar-ear left" />
+      <span className="clay-avatar-ear right" />
+      <span className="clay-avatar-face">
+        <span className="clay-avatar-brow left" />
+        <span className="clay-avatar-brow right" />
+        <span className="clay-avatar-eye left" />
+        <span className="clay-avatar-eye right" />
+        <span className="clay-avatar-cheek left" />
+        <span className="clay-avatar-cheek right" />
+        <span className="clay-avatar-smile" />
+      </span>
+      {!compact && (
+        <span className="clay-avatar-body" />
+      )}
+    </span>
+  );
+}
 
 export function ProfileMenu({ onSignIn }) {
   const { loading, signOut, user } = useAuth();
@@ -43,10 +65,12 @@ export function ProfileMenu({ onSignIn }) {
   return (
     <details className="profile-menu" ref={menuRef}>
       <summary aria-label="사용자 프로필 보기" title="사용자 프로필">
-        <CircleUserRound size={22} />
+        <ClayAvatar compact />
       </summary>
       <div className="profile-popover">
-        <div className="profile-avatar"><CircleUserRound size={30} /></div>
+        <div className="profile-avatar">
+          <ClayAvatar />
+        </div>
         {user ? (
           <>
             <strong>{profileName}</strong>
