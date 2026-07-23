@@ -7,6 +7,7 @@ const schema = z.object({
   startYear: z.number().int().min(1900).max(2100),
   endYear: z.number().int().min(1900).max(2100),
   limit: z.number().int().min(1).max(100),
+  sortOrder: z.enum(['relevance', 'newest', 'oldest']).default('relevance'),
 }).refine((value) => value.startYear <= value.endYear, { message: '시작 연도는 끝 연도보다 클 수 없습니다.' });
 
 export const collectionRouter = Router();

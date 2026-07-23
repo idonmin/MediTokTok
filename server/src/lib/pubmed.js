@@ -27,18 +27,27 @@ function normalizePmcid(value) {
   return value.toUpperCase().startsWith('PMC') ? value.toUpperCase() : `PMC${value}`;
 }
 
-export async function searchPmids({ keyword, startYear, endYear, limit }) {
+export async function searchPmids({ keyword, startYear, endYear, limit, sortOrder = 'relevance' }) {
+  const normalizedSortOrder = String(sortOrder || 'relevance').toLowerCase();
+  const isDateSorted = normalizedSortOrder === 'newest' || normalizedSortOrder === 'oldest';
   const query = new URLSearchParams({
     db: 'pubmed',
     retmode: 'json',
-    retmax: String(limit),
+    retmax: String(isDateSorted ? 10000 : limit),
     term: `${keyword} AND ${startYear}:${endYear}[pdat]`,
+    ...(normalizedSortOrder === 'relevance' ? {} : { sort: isDateSorted ? 'pub_date' : normalizedSortOrder }),
     ...(env.ncbiApiKey ? { api_key: env.ncbiApiKey } : {}),
   });
   const response = await fetch(`${BASE_URL}/esearch.fcgi?${query}`);
   if (!response.ok) throw new Error('PubMed PMID 검색에 실패했습니다.');
   const data = await response.json();
-  return data.esearchresult?.idlist || [];
+  const idList = data.esearchresult?.idlist || [];
+
+  if (normalizedSortOrder === 'oldest') {
+    return idList.reverse().slice(0, limit);
+  }
+
+  return idList.slice(0, limit);
 }
 
 export async function fetchPaperMetadata(pmids) {

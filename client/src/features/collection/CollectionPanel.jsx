@@ -1,18 +1,25 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { collectPapers } from "./collection.api.js";
+import { useAuth } from "../auth/auth-context.js";
 
 const initialForm = {
   keyword: "",
   startYear: "",
   endYear: "",
   limit: 20,
+  sortOrder: "relevance",
 };
 
 export function CollectionPanel() {
+  const { user } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState("");
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
+  const lastCollectionKey = useMemo(
+    () => (user?.id ? `meditalktalk:last-collection:${user.id}` : "meditalktalk:last-collection"),
+    [user?.id],
+  );
 
   const update = (event) =>
     setForm((current) => ({
@@ -38,6 +45,12 @@ export function CollectionPanel() {
         endYear: Number(form.endYear),
         limit: Number(form.limit),
       });
+      window.localStorage.setItem(lastCollectionKey, JSON.stringify({
+        inserted: result.inserted,
+        skipped: result.skipped,
+        found: result.found,
+        collectedAt: new Date().toISOString(),
+      }));
       setStatus(
         `총 ${result.found}건 중 신규 ${result.inserted}건 · 중복 ${result.skipped}건`,
       );
@@ -94,6 +107,18 @@ export function CollectionPanel() {
           />
         </label>
       </div>
+      <label>
+        수집 정렬
+        <select
+          name="sortOrder"
+          value={form.sortOrder}
+          onChange={update}
+        >
+          <option value="relevance">관련도순</option>
+          <option value="newest">최신순</option>
+          <option value="oldest">오래된순</option>
+        </select>
+      </label>
       <div className="range-field">
         <div className="range-head">
           <span>최대 수집 논문 수</span>
