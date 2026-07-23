@@ -362,6 +362,8 @@ npm run dev
 
 프론트엔드는 **Vercel**, 백엔드는 **Render**, 데이터베이스와 인증은 **Supabase**를 사용해 분리 배포했습니다.
 
+- 배포 주소: [메디톡톡 바로가기](https://medi-tok-tok-client-ka1mfgbph-medi-tok-tok.vercel.app/)
+
 ### Frontend - Vercel
 
 - Root Directory: `client`
