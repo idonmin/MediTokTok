@@ -60,9 +60,8 @@ input:focus, select:focus { border-color: #8a6cc9; box-shadow: 0 0 0 3px #e3d9f5
 .record-title { display: block; color: #2d2735; font-size: .9rem; line-height: 1.45; }
 .record-meta, .record-authors, .collection-more { margin: 6px 0 0; color: #766f80; font-size: .75rem; line-height: 1.45; }
 .form-status, .demo-note { color: #766f80; font-size: .78rem; line-height: 1.5; }
-.sidebar-user { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #6e6678; font-size: .78rem; word-break: break-all; }
 .workspace { min-width: 0; }
-.workspace-header { height: 82px; display: flex; align-items: center; padding: 0 clamp(24px, 5vw, 70px); background: rgba(244,241,250,.85); border-bottom: 1px solid #e2dce9; position: sticky; top: 0; backdrop-filter: blur(12px); z-index: 5; }
+.workspace-header { height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 clamp(24px, 5vw, 70px); background: rgba(244,241,250,.85); border-bottom: 1px solid #e2dce9; position: sticky; top: 0; backdrop-filter: blur(12px); z-index: 5; }
 .tabs { display: flex; gap: 8px; }
 .tabs a { color: #756e7d; text-decoration: none; padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: .9rem; }
 .tabs a.active { color: #5b409d; background: #e8e0f5; }
