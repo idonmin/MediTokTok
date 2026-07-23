@@ -1,19 +1,40 @@
 import { requireDatabase } from '../../lib/supabase.js';
 import { fetchPaperMetadata, searchPmids } from '../../lib/pubmed.js';
 
+function dedupeByPmid(papers) {
+  const seen = new Set();
+  return papers.filter((paper) => {
+    if (!paper.pmid || seen.has(paper.pmid)) return false;
+    seen.add(paper.pmid);
+    return true;
+  });
+}
+
 export async function collectAndSavePapers(conditions, userId) {
   const database = requireDatabase();
   const pmids = await searchPmids(conditions);
-  const papers = await fetchPaperMetadata(pmids);
-  if (!papers.length) return { found: 0, inserted: 0, skipped: 0 };
+  const papers = dedupeByPmid(await fetchPaperMetadata(pmids));
+  if (!papers.length) return { found: 0, inserted: 0, skipped: 0, records: [] };
 
-  const { data: existing, error: selectError } = await database.from('pubmed_records').select('pmid').in('pmid', papers.map((paper) => paper.pmid));
+  const { data: existing, error: selectError } = await database
+    .from('pubmed_records')
+    .select('pmid')
+    .in('pmid', papers.map((paper) => paper.pmid));
   if (selectError) throw selectError;
+
   const existingPmids = new Set((existing || []).map((paper) => paper.pmid));
-  const newPapers = papers.filter((paper) => !existingPmids.has(paper.pmid)).map((paper) => ({ ...paper, collected_by: userId }));
+  const records = papers.map((paper) => ({
+    ...paper,
+    wasInserted: !existingPmids.has(paper.pmid),
+  }));
+  const newPapers = records
+    .filter((paper) => paper.wasInserted)
+    .map(({ wasInserted, ...paper }) => ({ ...paper, collected_by: userId }));
 
   if (newPapers.length) {
-    const { error: insertError } = await database.from('pubmed_records').insert(newPapers);
+    const { error: insertError } = await database
+      .from('pubmed_records')
+      .upsert(newPapers, { onConflict: 'pmid', ignoreDuplicates: true });
     if (insertError) throw insertError;
   }
 
@@ -26,5 +47,5 @@ export async function collectAndSavePapers(conditions, userId) {
     limit: conditions.limit,
     ...result,
   });
-  return result;
+  return { ...result, records };
 }
