@@ -19,17 +19,15 @@ overviewRouter.get('/', async (_req, res, next) => {
 overviewRouter.post('/reset', async (_req, res, next) => {
   try {
     const database = requireDatabase();
-    const [{ count: clearedRecords, error: recordsError }, { count: clearedRuns, error: runsError }] = await Promise.all([
-      database.from('pubmed_records').delete().select('pmid', { count: 'exact' }),
-      database.from('collection_runs').delete().select('id', { count: 'exact' }),
-    ]);
+    const { count: clearedRecords, error: deleteError } = await database
+      .from('pubmed_records')
+      .delete()
+      .select('pmid', { count: 'exact' });
 
-    if (recordsError) throw recordsError;
-    if (runsError) throw runsError;
+    if (deleteError) throw deleteError;
 
     res.json({
       clearedRecords: clearedRecords ?? 0,
-      clearedRuns: clearedRuns ?? 0,
     });
   } catch (error) {
     next(error);
