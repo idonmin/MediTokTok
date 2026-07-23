@@ -56,7 +56,7 @@ function NumberTooltip({ active, payload, label }) {
 
   return (
     <div className="chart-tooltip clay-panel">
-      <strong>{label}</strong>
+      <strong title={label}>{label}</strong>
       <span>{formatCompact(payload[0].value)}편</span>
     </div>
   );
@@ -308,7 +308,12 @@ export function OverviewPage() {
                     tick={{ fontSize: 12, fill: '#6f6478' }}
                     tickFormatter={(value) => truncateLabel(value, 20)}
                   />
-                  <Tooltip content={<NumberTooltip />} cursor={{ fill: 'rgba(111, 88, 201, 0.08)' }} />
+                  <Tooltip
+                    content={<NumberTooltip />}
+                    cursor={{ fill: 'rgba(111, 88, 201, 0.08)' }}
+                    allowEscapeViewBox={{ x: true, y: true }}
+                    wrapperStyle={{ zIndex: 20 }}
+                  />
                   <Bar dataKey="count" radius={[0, 14, 14, 0]} barSize={22}>
                     {overview.journals.map((entry, index) => (
                       <Cell key={entry.name} fill={journalPalette[index % journalPalette.length]} />
