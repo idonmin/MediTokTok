@@ -18,7 +18,7 @@ cp server/.env.example server/.env
 npm run dev
 ```
 
-환경변수는 루트 `.env` 또는 `client/.env`와 `server/.env`에 설정할 수 있습니다. Supabase SQL Editor에서 `supabase/migrations`의 SQL 파일을 번호 순서대로 실행한 뒤 Google Provider와 Redirect URL을 설정합니다. 기존에 `001_initial_schema.sql`만 실행했다면 `002_api_role_permissions.sql`을 추가로 실행합니다.
+환경변수는 루트 `.env` 또는 `client/.env`와 `server/.env`에 설정할 수 있습니다. 새 Supabase 프로젝트의 SQL Editor에서 `supabase/schema.sql`을 실행한 뒤 Google Provider와 Redirect URL을 설정합니다.
 
 - Client: http://localhost:5173
 - Server health: http://localhost:4000/api/health
@@ -30,6 +30,6 @@ npm run dev
 - 요구사항-파일 매핑: `docs/requirements-map.md`
 - 브랜치 및 역할 분배: `docs/team-guide.md`
 - 배포 담당 체크리스트: `docs/deployment.md`
-- DB 스키마: `supabase/migrations/001_initial_schema.sql`
+- DB 스키마: `supabase/schema.sql`
 
 API 키는 React의 `VITE_*` 변수나 Supabase 테이블에 저장하지 않습니다. Express 서버의 환경변수 또는 배포 플랫폼의 Secret에 저장합니다.

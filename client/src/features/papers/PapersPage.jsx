@@ -22,8 +22,6 @@ function buildQuery(filters, page) {
 }
 
 function getArticleLink(paper) {
-  if (paper.pmcid) return { href: `https://pmc.ncbi.nlm.nih.gov/articles/${paper.pmcid}/`, label: 'PMC' };
-  if (paper.doi) return { href: `https://doi.org/${encodeURIComponent(paper.doi)}`, label: 'DOI' };
   return { href: `https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`, label: 'PubMed' };
 }
 

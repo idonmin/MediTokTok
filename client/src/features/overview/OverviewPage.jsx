@@ -8,7 +8,7 @@ const journalPalette = ['#5d43a8', '#7b5ad0', '#8f6ce6', '#a67ff3', '#c18cf7', '
 const emptyOverview = {
   totalPapers: 0,
   totalJournals: 0,
-  latestRun: null,
+  latestCollectedAt: null,
   byYear: [],
   journals: [],
 };
@@ -85,7 +85,6 @@ export function OverviewPage() {
         setOverview({
           ...emptyOverview,
           ...data,
-          latestRun: data.latestRun || null,
         });
       } catch (err) {
         if (!active) return;
@@ -110,7 +109,8 @@ export function OverviewPage() {
     };
   }, []);
 
-  const latestRun = overview.latestRun;
+  const latestCollectedAt = overview.latestCollectedAt;
+  const yearValues = overview.byYear.map((item) => Number(item.year)).filter(Number.isFinite);
   const summaryCards = [
     {
       label: '전체 논문',
@@ -119,15 +119,15 @@ export function OverviewPage() {
       tone: '#6f58c9',
     },
     {
-      label: '신규 수집',
-      value: formatCompact(latestRun?.inserted),
-      caption: latestRun ? `${latestRun.keyword} · ${latestRun.start_year}-${latestRun.end_year}` : '아직 수집된 결과가 없습니다',
+      label: '최근 수집',
+      value: latestCollectedAt ? formatDateTime(latestCollectedAt) : '—',
+      caption: latestCollectedAt ? '마지막으로 내 목록에 추가된 시각' : '아직 수집된 결과가 없습니다',
       tone: '#4d8fcb',
     },
     {
-      label: '중복 Skip',
-      value: formatCompact(latestRun?.skipped),
-      caption: latestRun ? `최근 수집 ${formatDateTime(latestRun.created_at)}` : '중복된 논문이 아직 없습니다',
+      label: '수록 연도',
+      value: yearValues.length ? `${Math.min(...yearValues)}–${Math.max(...yearValues)}` : '—',
+      caption: '내 수집 목록의 발행 연도 범위',
       tone: '#d9778b',
     },
     {
@@ -170,10 +170,10 @@ export function OverviewPage() {
           <button className="button button-danger" type="button" onClick={handleReset} disabled={clearing}>
             {clearing ? '초기화 중…' : '저장 내용 초기화'}
           </button>
-          {latestRun && (
+          {latestCollectedAt && (
             <div className="overview-badge clay-panel">
               <span>최근 수집</span>
-              <strong>{formatDateTime(latestRun.created_at)}</strong>
+              <strong>{formatDateTime(latestCollectedAt)}</strong>
             </div>
           )}
         </div>

@@ -27,7 +27,6 @@ export function PaperFilters({ filters, onChange, onSubmit }) {
             value={filters.searchTerm}
             onChange={update}
             placeholder={searchPlaceholder}
-            required
             autoComplete="off"
           />
         </label>

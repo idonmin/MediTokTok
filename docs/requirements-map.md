@@ -3,7 +3,7 @@
 | 번호 | 기능 | 프론트엔드 | 백엔드/DB |
 |---|---|---|---|
 | 1 | PubMed 검색 조건 | `client/src/features/collection/CollectionPanel.jsx` | `server/src/modules/collection/collection.routes.js` |
-| 2 | 수집·중복 방지 | `client/src/features/collection/collection.api.js` | `collection.service.js`, 공용 `pubmed_records`, 사용자별 `user_papers` 테이블 |
+| 2 | 수집·중복 방지 | `client/src/features/collection/collection.api.js` | `collection.service.js`, 공용 `pubmed_records`, 사용자별 `user_paper_collections` 테이블 |
 | 3 | 개요·시각화 | `client/src/features/overview/OverviewPage.jsx` | `overview.routes.js` |
 | 4 | 논문 검색 | `client/src/features/papers/PapersPage.jsx`, `PaperFilters.jsx` | `papers.routes.js` |
 | 5 | Memory 챗봇 | `client/src/features/chat/ChatPage.jsx` | `chat.routes.js`, `chat.service.js`, 채팅 테이블 |

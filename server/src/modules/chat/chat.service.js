@@ -5,7 +5,7 @@ import { requireDatabase } from '../../lib/supabase.js';
 export async function listConversations(userId) {
   const database = requireDatabase();
   const { data, error } = await database
-    .from('chat_conversations')
+    .from('chat_rooms')
     .select('id,title,created_at,updated_at')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false })
@@ -20,7 +20,7 @@ export async function loadConversation(userId, conversationId) {
     .from('chat_messages')
     .select('id,role,content,created_at')
     .eq('user_id', userId)
-    .eq('conversation_id', conversationId)
+    .eq('room_id', conversationId)
     .order('created_at', { ascending: false })
     .limit(100);
   if (error) throw error;
@@ -30,7 +30,7 @@ export async function loadConversation(userId, conversationId) {
 export async function ensureConversation(userId, conversationId, firstMessage) {
   const database = requireDatabase();
   const { data: existing, error: selectError } = await database
-    .from('chat_conversations')
+    .from('chat_rooms')
     .select('user_id')
     .eq('id', conversationId)
     .maybeSingle();
@@ -43,7 +43,7 @@ export async function ensureConversation(userId, conversationId, firstMessage) {
   if (existing) return;
 
   const title = firstMessage.replace(/\s+/g, ' ').trim().slice(0, 60) || '새 대화';
-  const { error } = await database.from('chat_conversations').insert({
+  const { error } = await database.from('chat_rooms').insert({
     id: conversationId,
     user_id: userId,
     title,
@@ -53,14 +53,13 @@ export async function ensureConversation(userId, conversationId, firstMessage) {
 
 export async function saveMessage({ userId, conversationId, role, content }) {
   const database = requireDatabase();
-  const { error } = await database.from('chat_messages').insert({ user_id: userId, conversation_id: conversationId, role, content });
+  const { error } = await database.from('chat_messages').insert({
+    user_id: userId,
+    room_id: conversationId,
+    role,
+    content,
+  });
   if (error) throw error;
-  const { error: updateError } = await database
-    .from('chat_conversations')
-    .update({ updated_at: new Date().toISOString() })
-    .eq('id', conversationId)
-    .eq('user_id', userId);
-  if (updateError) throw updateError;
 }
 
 export async function createChatStream(messages) {
