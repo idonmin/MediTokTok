@@ -1,5 +1,5 @@
 import { BarChart3, BookOpen, LogOut, MessageSquareText } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/auth-context.js';
 import { CollectionPanel } from '../features/collection/CollectionPanel.jsx';
 
@@ -14,7 +14,7 @@ export function DashboardLayout() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">메디톡톡</div>
+        <Link className="brand" to="/" aria-label="랜딩페이지로 이동">메디톡톡</Link>
         <CollectionPanel />
         <div className="sidebar-user">
           <span>{user?.email || '개발용 데모 사용자'}</span>

@@ -7,10 +7,7 @@ export function AuthCallbackPage() {
 
   useEffect(() => {
     if (!session) return;
-    const storedPath = sessionStorage.getItem('authReturnTo') || '/app/overview';
-    const returnTo = storedPath.startsWith('/app/') ? storedPath : '/app/overview';
-    sessionStorage.removeItem('authReturnTo');
-    window.location.replace(returnTo);
+    window.location.replace('/');
   }, [session]);
 
   if (!configured) return <main className="center-page">Supabase 로그인 설정이 필요합니다.</main>;

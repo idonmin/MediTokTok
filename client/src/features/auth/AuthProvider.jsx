@@ -31,10 +31,8 @@ export function AuthProvider({ children }) {
     loading,
     authError,
     configured: isSupabaseConfigured,
-    signIn: async (returnTo = '/app/overview') => {
+    signIn: async () => {
       if (!supabase) return { error: new Error('Supabase 환경변수가 설정되지 않았습니다.') };
-      const safeReturnTo = returnTo.startsWith('/app/') ? returnTo : '/app/overview';
-      sessionStorage.setItem('authReturnTo', safeReturnTo);
       const result = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: `${window.location.origin}/auth/callback` },
