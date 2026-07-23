@@ -36,25 +36,25 @@
 
 > 서비스 설명, 핵심 기능, 보호 페이지 내비게이션과 Google OAuth 진입점을 제공하는 Claymorphism 랜딩 페이지
 
-![메디톡톡 랜딩 페이지](./docs/screenshots/landing.jpg)
+![메디톡톡 랜딩 페이지](./docs/screenshots/landing.png)
 
 ### 2. 개요 대시보드
 
 > 2020~2026년에 걸친 실제 수집 데이터 79편을 기준으로 전체 논문·신규 저장·중복 Skip·저널 수와 연도별/저널별 차트
 
-![다년도 논문 데이터가 표시된 개요 대시보드](./docs/screenshots/overview.jpg)
+![다년도 논문 데이터가 표시된 개요 대시보드](./docs/screenshots/overview.png)
 
 ### 3. 논문 검색 및 필터
 
 > 제목·Abstract에 `vaccine`, 연도 범위에 `2020~2024`를 적용해 43건이 필터링
 
-![논문 검색 및 필터 화면](./docs/screenshots/papers.jpg)
+![논문 검색 및 필터 화면](./docs/screenshots/papers.png)
 
 ### 4. 연구 챗봇
 
 > 채팅방 선택, 대화 기록 복원, 스트리밍 응답 UI와 의료 안전 안내를 제공
 
-![메디톡톡 연구 챗봇 화면](./docs/screenshots/chat.jpg)
+![메디톡톡 연구 챗봇 화면](./docs/screenshots/chat.png)
 
 ## 주요 기능
 
