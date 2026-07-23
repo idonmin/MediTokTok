@@ -2,13 +2,17 @@ import { supabase } from './supabase.js';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-async function request(path, options = {}) {
+async function authHeaders() {
   const session = supabase ? (await supabase.auth.getSession()).data.session : null;
+  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+}
+
+async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      ...(await authHeaders()),
       ...options.headers,
     },
   });
@@ -21,13 +25,27 @@ async function request(path, options = {}) {
   return response.json();
 }
 
+async function download(path) {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: {
+      ...(await authHeaders()),
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || '요청을 처리하지 못했습니다.');
+  }
+
+  return response.blob();
+}
+
 async function stream(path, body, onEvent) {
-  const session = supabase ? (await supabase.auth.getSession()).data.session : null;
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      ...(await authHeaders()),
     },
     body: JSON.stringify(body),
   });
@@ -71,6 +89,7 @@ export const api = {
   get: (path) => request(path),
   post: (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
   delete: (path) => request(path, { method: 'DELETE' }),
+  download,
   stream,
   streamUrl: (path) => `${API_URL}${path}`,
 };

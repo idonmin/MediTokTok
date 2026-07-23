@@ -16,6 +16,17 @@ function text(value) {
   return String(value);
 }
 
+function articleIdInfo(articleId) {
+  const type = String(articleId?.['@_IdType'] || articleId?.IdType || articleId?.['@_idtype'] || '').toLowerCase();
+  const value = text(articleId).trim();
+  return { type, value };
+}
+
+function normalizePmcid(value) {
+  if (!value) return '';
+  return value.toUpperCase().startsWith('PMC') ? value.toUpperCase() : `PMC${value}`;
+}
+
 export async function searchPmids({ keyword, startYear, endYear, limit }) {
   const query = new URLSearchParams({
     db: 'pubmed',
@@ -47,11 +58,14 @@ export async function fetchPaperMetadata(pmids) {
     const citation = item.MedlineCitation || {};
     const article = citation.Article || {};
     const journalIssue = article.Journal?.JournalIssue || {};
-    const authors = asArray(article.AuthorList?.Author).map((author) =>
-      [text(author.ForeName), text(author.LastName)].filter(Boolean).join(' '),
-    ).filter(Boolean);
+    const authors = asArray(article.AuthorList?.Author)
+      .map((author) => [text(author.ForeName), text(author.LastName)].filter(Boolean).join(' '))
+      .filter(Boolean);
     const abstract = asArray(article.Abstract?.AbstractText).map(text).join('\n');
     const date = journalIssue.PubDate || {};
+    const articleIds = asArray(item.PubmedData?.ArticleIdList?.ArticleId).map(articleIdInfo);
+    const doi = articleIds.find((entry) => entry.type === 'doi')?.value || '';
+    const pmcid = normalizePmcid(articleIds.find((entry) => entry.type === 'pmc' || entry.type === 'pmcid')?.value || '');
 
     return {
       pmid: text(citation.PMID),
@@ -60,6 +74,8 @@ export async function fetchPaperMetadata(pmids) {
       journal: text(article.Journal?.Title),
       pub_year: Number(text(date.Year) || text(date.MedlineDate).slice(0, 4)) || null,
       authors,
+      doi,
+      pmcid,
     };
   }).filter((paper) => paper.pmid);
 }
