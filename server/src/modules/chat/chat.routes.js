@@ -2,7 +2,15 @@ import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
 import { medicalSafety } from '../../middleware/medicalSafety.js';
-import { createChatStream, ensureConversation, listConversations, loadConversation, saveMessage } from './chat.service.js';
+import {
+  createChatStream,
+  createConversation,
+  deleteConversation,
+  ensureConversation,
+  listConversations,
+  loadConversation,
+  saveMessage,
+} from './chat.service.js';
 
 const schema = z.object({
   conversationId: z.string().uuid().optional(),
@@ -16,6 +24,26 @@ chatRouter.get('/conversations', async (req, res, next) => {
     const conversations = await listConversations(req.user.id);
     res.json({ items: conversations });
   } catch (error) {
+    next(error);
+  }
+});
+
+chatRouter.post('/conversations', async (req, res, next) => {
+  try {
+    const conversation = await createConversation(req.user.id);
+    res.status(201).json(conversation);
+  } catch (error) {
+    next(error);
+  }
+});
+
+chatRouter.delete('/conversations/:conversationId', async (req, res, next) => {
+  try {
+    const conversationId = z.string().uuid().parse(req.params.conversationId);
+    const deleted = await deleteConversation(req.user.id, conversationId);
+    res.json(deleted);
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ message: '올바르지 않은 대화 ID입니다.' });
     next(error);
   }
 });
