@@ -7,8 +7,8 @@ async function loadOverview(database, userId) {
   const [recordsResult, latestRunResult] = await Promise.all([
     database
       .from('pubmed_records')
-      .select('pub_year,journal,user_papers!inner(user_id)')
-      .eq('user_papers.user_id', userId),
+      .select('pub_year,journal')
+      .eq('user_id', userId),
     database
       .from('collection_runs')
       .select('keyword,start_year,end_year,limit,found,inserted,skipped,created_at')
@@ -56,7 +56,7 @@ async function loadOverview(database, userId) {
 
 async function clearOverview(database, userId) {
   const [recordsResult, runsResult] = await Promise.all([
-    database.from('user_papers').delete().eq('user_id', userId).select('pmid'),
+    database.from('pubmed_records').delete().eq('user_id', userId).select('pmid'),
     database.from('collection_runs').delete().eq('user_id', userId).select('id'),
   ]);
 

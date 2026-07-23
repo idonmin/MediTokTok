@@ -29,15 +29,14 @@ papersRouter.get('/', async (req, res, next) => {
     const pageSize = Math.min(Math.max(Number(req.query.pageSize) || 20, 1), 100);
     let query = database
       .from('pubmed_records')
-      .select('pmid,pub_year,title,journal,authors,doi,pmcid,user_papers!inner(user_id,collected_at)', { count: 'exact' })
-      .eq('user_papers.user_id', req.user.id)
+      .select('pmid,pub_year,title,journal,authors,doi,pmcid', { count: 'exact' })
+      .eq('user_id', req.user.id)
       .order('pub_year', { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
     query = applyFilters(query, req.query);
     const { data, count, error } = await query;
     if (error) throw error;
-    const items = (data || []).map(({ user_papers: _userPapers, ...paper }) => paper);
-    res.json({ items, total: count, page, pageSize });
+    res.json({ items: data || [], total: count, page, pageSize });
   } catch (error) {
     next(error);
   }
@@ -48,8 +47,8 @@ papersRouter.get('/export', async (req, res, next) => {
     const database = requireDatabase();
     let query = database
       .from('pubmed_records')
-      .select('pmid,pub_year,title,journal,authors,doi,pmcid,user_papers!inner(user_id)')
-      .eq('user_papers.user_id', req.user.id);
+      .select('pmid,pub_year,title,journal,authors,doi,pmcid')
+      .eq('user_id', req.user.id);
     query = applyFilters(query, req.query);
     const { data, error } = await query;
     if (error) throw error;
