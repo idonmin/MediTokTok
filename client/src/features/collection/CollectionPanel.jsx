@@ -34,6 +34,7 @@ export function CollectionPanel() {
       });
       setStatus(`신규 ${result.inserted}건 · 중복 ${result.skipped}건`);
       setRecords(result.records || []);
+      window.dispatchEvent(new CustomEvent('pubmed-records-changed'));
     } catch (error) {
       setStatus(error.message);
     } finally {

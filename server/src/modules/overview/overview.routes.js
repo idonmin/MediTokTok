@@ -22,6 +22,7 @@ overviewRouter.post('/reset', async (_req, res, next) => {
     const { count: clearedRecords, error: deleteError } = await database
       .from('pubmed_records')
       .delete()
+      .like('pmid', '%')
       .select('pmid', { count: 'exact' });
 
     if (deleteError) throw deleteError;

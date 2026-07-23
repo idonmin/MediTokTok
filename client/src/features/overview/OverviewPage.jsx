@@ -45,19 +45,23 @@ export function OverviewPage() {
   useEffect(() => {
     const mountedRef = { current: true };
     loadOverview(mountedRef);
+
+    const handleRefresh = () => loadOverview(mountedRef);
+    window.addEventListener('pubmed-records-changed', handleRefresh);
+
     return () => {
       mountedRef.current = false;
+      window.removeEventListener('pubmed-records-changed', handleRefresh);
     };
   }, []);
 
   const handleReset = async () => {
-    if (!window.confirm('현재 저장된 논문과 수집 이력을 모두 초기화할까요?')) return;
+    if (!window.confirm('현재 저장된 논문만 초기화할까요?')) return;
     setResetting(true);
     setError('');
     try {
       await api.post('/overview/reset', {});
-      const mountedRef = { current: true };
-      await loadOverview(mountedRef);
+      window.dispatchEvent(new CustomEvent('pubmed-records-changed'));
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -80,7 +84,7 @@ export function OverviewPage() {
           <h1>연구 현황을 한눈에</h1>
         </div>
         <button className="button button-ghost" type="button" onClick={handleReset} disabled={loading || resetting}>
-          {resetting ? '초기화 중…' : '데이터 초기화'}
+          {resetting ? '초기화 중…' : '수집 데이터 초기화'}
         </button>
       </div>
       {loading && <p className="demo-note">실제 `/api/overview` 데이터를 불러오는 중입니다.</p>}
