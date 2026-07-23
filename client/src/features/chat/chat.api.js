@@ -4,6 +4,9 @@ export const getConversations = () => api.get('/chat/conversations');
 
 export const createConversation = () => api.post('/chat/conversations', {});
 
+export const createPaperConversation = (pmids) =>
+  api.post('/chat/conversations/from-papers', { pmids });
+
 export const deleteConversation = (conversationId) =>
   api.delete(`/chat/conversations/${conversationId}`);
 

@@ -909,7 +909,9 @@ select:focus {
 }
 
 .overview-page {
+  width: 100%;
   max-width: 1280px;
+  margin-inline: auto;
 }
 
 .page-heading {
@@ -1266,8 +1268,8 @@ tbody td:last-child {
 
 .new-chat-room {
   width: 100%;
-  min-height: 43px;
-  padding: 10px 13px;
+  min-height: 46px;
+  padding: 8px 13px;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -1295,25 +1297,27 @@ tbody td:last-child {
 }
 
 .chat-room-list {
+  width: 100%;
   max-height: 264px;
   margin-top: 10px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 7px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .chat-room-item {
-  min-height: 44px;
-  padding: 4px 5px 4px 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 5px 6px 5px 13px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 36px;
   align-items: center;
   gap: 5px;
   border: 1px solid rgba(255,255,255,.7);
-  border-radius: 14px;
+  border-radius: 15px;
   background: linear-gradient(145deg, rgba(250,247,253,.92), rgba(229,220,239,.9));
   box-shadow:
     4px 5px 9px rgba(101,79,127,.11),
@@ -1625,8 +1629,9 @@ tbody td:last-child {
 }
 
 .filter-grid {
+  width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   align-items: end;
 }
@@ -1667,6 +1672,96 @@ tbody td:last-child {
   font-size: .84rem;
   font-weight: 700;
   text-align: center;
+}
+
+.pagination-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.send-papers-button {
+  min-width: 190px;
+}
+
+.paper-selection-status {
+  margin: 14px 0 0;
+  color: #a34c69;
+  font-size: .82rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.paper-select-column,
+.paper-select-cell {
+  width: 62px;
+  text-align: center;
+}
+
+.paper-checkbox-label {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.paper-checkbox {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.paper-checkbox-label > span {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255,255,255,.86);
+  border-radius: 9px;
+  background: linear-gradient(145deg, #f8f4fb, #ded2ea);
+  box-shadow:
+    4px 5px 8px rgba(103,81,132,.15),
+    inset 2px 2px 3px rgba(255,255,255,.86),
+    inset -2px -2px 4px rgba(170,149,194,.2);
+  transition: transform .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.paper-checkbox:focus-visible + span {
+  outline: 3px solid rgba(117,87,200,.28);
+  outline-offset: 2px;
+}
+
+.paper-checkbox:checked + span {
+  background: linear-gradient(145deg, #8c72dc, #6043ad);
+  box-shadow:
+    3px 4px 7px rgba(76,52,135,.24),
+    inset 2px 2px 3px rgba(255,255,255,.25),
+    inset -3px -3px 4px rgba(55,34,108,.25);
+}
+
+.paper-checkbox:checked + span::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 3px;
+  width: 6px;
+  height: 11px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+tbody tr.selected td {
+  background: linear-gradient(145deg, rgba(242,235,252,.98), rgba(215,200,237,.94));
 }
 
 .paper-link {
@@ -1712,5 +1807,15 @@ tbody td:last-child {
   .pagination-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .pagination-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .send-papers-button {
+    width: 100%;
   }
 }

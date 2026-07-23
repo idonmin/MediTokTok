@@ -5,16 +5,25 @@ import { medicalSafety } from '../../middleware/medicalSafety.js';
 import {
   createChatStream,
   createConversation,
+  createPaperConversation,
   deleteConversation,
   ensureConversation,
   listConversations,
   loadConversation,
+  loadConversationPapers,
   saveMessage,
 } from './chat.service.js';
 
 const schema = z.object({
   conversationId: z.string().uuid().optional(),
   message: z.string().trim().min(1).max(4000),
+});
+
+const paperConversationSchema = z.object({
+  pmids: z.array(
+    z.string().trim().regex(/^\d+$/, '올바르지 않은 PMID가 포함되어 있습니다.'),
+  ).min(1, '논문을 한 편 이상 선택해 주세요.')
+    .max(5, '논문은 한 번에 최대 5편까지 선택할 수 있습니다.'),
 });
 
 export const chatRouter = Router();
@@ -37,6 +46,21 @@ chatRouter.post('/conversations', async (req, res, next) => {
   }
 });
 
+chatRouter.post('/conversations/from-papers', async (req, res, next) => {
+  try {
+    const input = paperConversationSchema.parse(req.body);
+    const uniquePmids = [...new Set(input.pmids)];
+    if (uniquePmids.length !== input.pmids.length) {
+      return res.status(400).json({ message: '중복된 논문이 포함되어 있습니다.' });
+    }
+    const conversation = await createPaperConversation(req.user.id, uniquePmids);
+    res.status(201).json(conversation);
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ message: error.issues[0].message });
+    next(error);
+  }
+});
+
 chatRouter.delete('/conversations/:conversationId', async (req, res, next) => {
   try {
     const conversationId = z.string().uuid().parse(req.params.conversationId);
@@ -55,6 +79,7 @@ chatRouter.post('/stream', medicalSafety, async (req, res, next) => {
     const conversationId = input.conversationId || randomUUID();
     await ensureConversation(req.user.id, conversationId, input.message);
     const history = await loadConversation(req.user.id, conversationId);
+    const selectedPapers = await loadConversationPapers(req.user.id, conversationId);
     await saveMessage({ userId: req.user.id, conversationId, role: 'user', content: input.message });
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
@@ -65,7 +90,10 @@ chatRouter.post('/stream', medicalSafety, async (req, res, next) => {
     res.write(`event: meta\ndata: ${JSON.stringify({ conversationId })}\n\n`);
 
     const context = history.map(({ role, content }) => ({ role, content }));
-    const stream = await createChatStream([...context, { role: 'user', content: input.message }]);
+    const stream = await createChatStream(
+      [...context, { role: 'user', content: input.message }],
+      selectedPapers,
+    );
     let answer = '';
     for await (const chunk of stream) {
       const token = chunk.choices[0]?.delta?.content || '';
