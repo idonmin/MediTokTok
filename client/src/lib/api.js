@@ -24,5 +24,6 @@ async function request(path, options = {}) {
 export const api = {
   get: (path) => request(path),
   post: (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
+  delete: (path) => request(path, { method: 'DELETE' }),
   streamUrl: (path) => `${API_URL}${path}`,
 };
