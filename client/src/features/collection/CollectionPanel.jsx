@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { collectPapers } from './collection.api.js';
+import { useState } from "react";
+import { collectPapers } from "./collection.api.js";
 
 const initialForm = {
-  keyword: '',
-  startYear: 2022,
-  endYear: 2025,
+  keyword: "",
+  startYear: "",
+  endYear: "",
   limit: 20,
 };
 
 export function CollectionPanel() {
   const [form, setForm] = useState(initialForm);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState("");
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -22,14 +22,14 @@ export function CollectionPanel() {
 
   const resetForm = () => {
     setForm({ ...initialForm });
-    setStatus('');
+    setStatus("");
     setRecords([]);
   };
 
   const submit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    setStatus('');
+    setStatus("");
     setRecords([]);
     try {
       const result = await collectPapers({
@@ -38,10 +38,16 @@ export function CollectionPanel() {
         endYear: Number(form.endYear),
         limit: Number(form.limit),
       });
-      setStatus(`총 ${result.found}건 중 신규 ${result.inserted}건 · 중복 ${result.skipped}건`);
+      setStatus(
+        `총 ${result.found}건 중 신규 ${result.inserted}건 · 중복 ${result.skipped}건`,
+      );
       setRecords(result.records || []);
-      window.dispatchEvent(new CustomEvent('papers-collected', { detail: result }));
-      window.dispatchEvent(new CustomEvent('pubmed-records-changed', { detail: result }));
+      window.dispatchEvent(
+        new CustomEvent("papers-collected", { detail: result }),
+      );
+      window.dispatchEvent(
+        new CustomEvent("pubmed-records-changed", { detail: result }),
+      );
     } catch (error) {
       setStatus(error.message);
     } finally {
@@ -72,6 +78,7 @@ export function CollectionPanel() {
             value={form.startYear}
             onChange={update}
             required
+            placeholder="예: 2026"
           />
         </label>
         <label>
@@ -83,6 +90,7 @@ export function CollectionPanel() {
             value={form.endYear}
             onChange={update}
             required
+            placeholder="예: 2026"
           />
         </label>
       </div>
@@ -106,11 +114,16 @@ export function CollectionPanel() {
         </div>
       </div>
       <div className="collection-actions">
-        <button className="button button-ghost" type="button" onClick={resetForm} disabled={loading}>
+        <button
+          className="button button-ghost"
+          type="button"
+          onClick={resetForm}
+          disabled={loading}
+        >
           초기화
         </button>
         <button className="button button-primary" disabled={loading}>
-          {loading ? '수집 중…' : 'PubMed 수집'}
+          {loading ? "수집 중…" : "PubMed 수집"}
         </button>
       </div>
       {status && <p className="form-status">{status}</p>}
@@ -124,22 +137,33 @@ export function CollectionPanel() {
             {records.slice(0, 5).map((record) => (
               <li key={record.pmid} className="collection-record-item">
                 <div className="record-topline">
-                  <span className={record.wasInserted ? 'record-badge new' : 'record-badge existing'}>
-                    {record.wasInserted ? '새로 저장됨' : '이미 저장됨'}
+                  <span
+                    className={
+                      record.wasInserted
+                        ? "record-badge new"
+                        : "record-badge existing"
+                    }
+                  >
+                    {record.wasInserted ? "새로 저장됨" : "이미 저장됨"}
                   </span>
                   <span className="record-pmid">PMID {record.pmid}</span>
                 </div>
                 <strong className="record-title">{record.title}</strong>
                 <p className="record-meta">
-                  {record.journal || '저널 정보 없음'} · {record.pub_year || '연도 정보 없음'}
+                  {record.journal || "저널 정보 없음"} ·{" "}
+                  {record.pub_year || "연도 정보 없음"}
                 </p>
                 <p className="record-authors">
-                  {record.authors?.length ? record.authors.join(', ') : '저자 정보 없음'}
+                  {record.authors?.length
+                    ? record.authors.join(", ")
+                    : "저자 정보 없음"}
                 </p>
               </li>
             ))}
           </ul>
-          {records.length > 5 && <p className="collection-more">처음 5건만 표시했습니다.</p>}
+          {records.length > 5 && (
+            <p className="collection-more">처음 5건만 표시했습니다.</p>
+          )}
         </section>
       )}
     </form>
