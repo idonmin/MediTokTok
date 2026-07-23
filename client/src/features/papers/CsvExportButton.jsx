@@ -1,9 +1,9 @@
-import { api } from '../../lib/api.js';
+import { api } from "../../lib/api.js";
 
 function buildQuery(filters) {
   const params = new URLSearchParams();
   Object.entries(filters || {}).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && String(value).trim() !== '') {
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
       params.set(key, String(value).trim());
     }
   });
@@ -13,11 +13,13 @@ function buildQuery(filters) {
 export function CsvExportButton({ filters }) {
   const download = async () => {
     const query = buildQuery(filters);
-    const blob = await api.download(`/papers/export${query ? `?${query}` : ''}`);
+    const blob = await api.download(
+      `/papers/export${query ? `?${query}` : ""}`,
+    );
     const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
+    const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = 'meditalktalk-papers.csv';
+    anchor.download = "pubmed_records.csv";
     anchor.click();
     URL.revokeObjectURL(url);
   };
