@@ -68,6 +68,8 @@ input:focus, select:focus { border-color: #8a6cc9; box-shadow: 0 0 0 3px #e3d9f5
 .tabs a.active { color: #5b409d; background: #e8e0f5; }
 .page-content { padding: 45px clamp(24px, 5vw, 70px) 70px; }
 .page-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 26px; }
+.overview-heading { gap: 16px; }
+.overview-heading .button { align-self: center; }
 .page-heading h1 { margin: 8px 0 0; font-size: clamp(1.8rem, 3vw, 2.6rem); letter-spacing: -.04em; }
 .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .stat-card { padding: 22px; }
@@ -80,12 +82,8 @@ input:focus, select:focus { border-color: #8a6cc9; box-shadow: 0 0 0 3px #e3d9f5
 .chart-card h2 { margin: 0 0 20px 8px; font-size: 1rem; }
 .filter-panel { padding: 18px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; align-items: end; gap: 12px; margin-bottom: 20px; }
 .table-wrap { overflow-x: auto; padding: 10px; }
-table, thead, tbody, tr, th, td { -webkit-tap-highlight-color: transparent; }
+table, thead, tbody, tr, th, td { -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
 table { width: 100%; border-collapse: collapse; font-size: .86rem; }
-tbody tr { transition: background-color 0.16s ease, transform 0.16s ease; }
-tbody tr:hover { background: #f4effb; }
-tbody tr:hover td { border-bottom-color: #dccfee; }
-tbody tr:active { background: #ede5f7; }
 th, td { padding: 15px 13px; text-align: left; border-bottom: 1px solid #e4deea; }
 th { color: #746d7d; font-size: .75rem; }
 .empty-state { padding: 28px; text-align: center; color: #7a7283; }

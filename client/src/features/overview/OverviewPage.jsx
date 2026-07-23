@@ -18,38 +18,56 @@ export function OverviewPage() {
   const [overview, setOverview] = useState(emptyOverview);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [resetting, setResetting] = useState(false);
   const yearChartHeight = Math.max(260, overview.byYear.length * 34 + 80);
   const journalChartHeight = Math.max(260, overview.journals.length * 40 + 70);
 
+  const loadOverview = async (mountedRef) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.get('/overview');
+      if (!mountedRef.current) return;
+      setOverview({
+        totalPapers: data.totalPapers ?? 0,
+        totalJournals: data.totalJournals ?? 0,
+        byYear: data.byYear ?? [],
+        journals: data.journals ?? [],
+      });
+    } catch (requestError) {
+      if (!mountedRef.current) return;
+      setError(requestError.message);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let active = true;
+    const mountedRef = { current: true };
+    loadOverview(mountedRef);
 
-    const loadOverview = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = await api.get('/overview');
-        if (!active) return;
-        setOverview({
-          totalPapers: data.totalPapers ?? 0,
-          totalJournals: data.totalJournals ?? 0,
-          byYear: data.byYear ?? [],
-          journals: data.journals ?? [],
-        });
-      } catch (requestError) {
-        if (!active) return;
-        setError(requestError.message);
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    loadOverview();
+    const handleRefresh = () => loadOverview(mountedRef);
+    window.addEventListener('pubmed-records-changed', handleRefresh);
 
     return () => {
-      active = false;
+      mountedRef.current = false;
+      window.removeEventListener('pubmed-records-changed', handleRefresh);
     };
   }, []);
+
+  const handleReset = async () => {
+    if (!window.confirm('현재 저장된 논문만 초기화할까요?')) return;
+    setResetting(true);
+    setError('');
+    try {
+      await api.post('/overview/reset', {});
+      window.dispatchEvent(new CustomEvent('pubmed-records-changed'));
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const stats = [
     ['전체 논문', overview.totalPapers],
@@ -60,11 +78,14 @@ export function OverviewPage() {
 
   return (
     <section className="page-content">
-      <div className="page-heading">
+      <div className="page-heading overview-heading">
         <div>
           <span className="eyebrow">OVERVIEW</span>
           <h1>연구 현황을 한눈에</h1>
         </div>
+        <button className="button button-ghost" type="button" onClick={handleReset} disabled={loading || resetting}>
+          {resetting ? '초기화 중…' : '수집 데이터 초기화'}
+        </button>
       </div>
       {loading && <p className="demo-note">실제 `/api/overview` 데이터를 불러오는 중입니다.</p>}
       {error && <p className="demo-note">{error}</p>}
@@ -82,12 +103,7 @@ export function OverviewPage() {
           <ResponsiveContainer width="100%" height={yearChartHeight}>
             <BarChart data={overview.byYear} margin={{ top: 12, right: 16, left: 0, bottom: 16 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey="year"
-                interval="preserveStartEnd"
-                tickMargin={10}
-                tick={{ fontSize: 12 }}
-              />
+              <XAxis dataKey="year" interval="preserveStartEnd" tickMargin={10} tick={{ fontSize: 12 }} />
               <YAxis allowDecimals={false} tickMargin={8} tick={{ fontSize: 12 }} width={34} />
               <Tooltip />
               <Bar dataKey="count" fill="#6750a4" radius={[8, 8, 0, 0]} />
