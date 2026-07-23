@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api } from '../../lib/api.js';
+import { useAuth } from '../auth/auth-context.js';
 
 const chartYears = '#6f58c9';
 const chartYearFill = 'url(#yearGradient)';
 const journalPalette = ['#5d43a8', '#7b5ad0', '#8f6ce6', '#a67ff3', '#c18cf7', '#d68df0', '#8a70d6', '#6d55bf'];
+const emptyCollectionSummary = {
+  inserted: null,
+  skipped: null,
+  collectedAt: null,
+};
 const emptyOverview = {
   totalPapers: 0,
   totalJournals: 0,
@@ -67,11 +73,17 @@ function StatCard({ label, value, caption, tone }) {
 }
 
 export function OverviewPage() {
+  const { user } = useAuth();
   const [overview, setOverview] = useState(emptyOverview);
+  const [collectionSummary, setCollectionSummary] = useState(emptyCollectionSummary);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [clearing, setClearing] = useState(false);
+
+  const lastCollectionKey = user?.id
+    ? `meditalktalk:last-collection:${user.id}`
+    : 'meditalktalk:last-collection';
 
   useEffect(() => {
     let active = true;
@@ -94,40 +106,79 @@ export function OverviewPage() {
       }
     };
 
+    const loadCollectionSummary = () => {
+      try {
+        const raw = window.localStorage.getItem(lastCollectionKey);
+        if (!raw) {
+          setCollectionSummary(emptyCollectionSummary);
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        setCollectionSummary({
+          inserted: Number.isFinite(Number(parsed?.inserted)) ? Number(parsed.inserted) : null,
+          skipped: Number.isFinite(Number(parsed?.skipped)) ? Number(parsed.skipped) : null,
+          collectedAt: parsed?.collectedAt || null,
+        });
+      } catch {
+        setCollectionSummary(emptyCollectionSummary);
+      }
+    };
+
+    const syncCollectionSummary = (event) => {
+      const detail = event?.detail || {};
+      if (Number.isFinite(Number(detail.inserted)) && Number.isFinite(Number(detail.skipped))) {
+        const next = {
+          inserted: Number(detail.inserted),
+          skipped: Number(detail.skipped),
+          collectedAt: new Date().toISOString(),
+        };
+        setCollectionSummary(next);
+        window.localStorage.setItem(lastCollectionKey, JSON.stringify(next));
+        return;
+      }
+
+      setCollectionSummary(emptyCollectionSummary);
+      window.localStorage.removeItem(lastCollectionKey);
+    };
+
     const refresh = () => {
       void loadOverview();
     };
 
     void loadOverview();
+    loadCollectionSummary();
     window.addEventListener('papers-collected', refresh);
     window.addEventListener('pubmed-records-changed', refresh);
+    window.addEventListener('papers-collected', syncCollectionSummary);
+    window.addEventListener('pubmed-records-changed', syncCollectionSummary);
 
     return () => {
       active = false;
       window.removeEventListener('papers-collected', refresh);
       window.removeEventListener('pubmed-records-changed', refresh);
+      window.removeEventListener('papers-collected', syncCollectionSummary);
+      window.removeEventListener('pubmed-records-changed', syncCollectionSummary);
     };
-  }, []);
+  }, [lastCollectionKey]);
 
   const latestCollectedAt = overview.latestCollectedAt;
-  const yearValues = overview.byYear.map((item) => Number(item.year)).filter(Number.isFinite);
   const summaryCards = [
     {
-      label: '전체 논문',
+      label: '전체 수집 논문',
       value: formatCompact(overview.totalPapers),
       caption: '내 수집 목록의 논문 수',
       tone: '#6f58c9',
     },
     {
-      label: '최근 수집',
-      value: latestCollectedAt ? formatDateTime(latestCollectedAt) : '—',
-      caption: latestCollectedAt ? '마지막으로 내 목록에 추가된 시각' : '아직 수집된 결과가 없습니다',
+      label: '신규 저장',
+      value: collectionSummary.inserted != null ? formatCompact(collectionSummary.inserted) : '—',
+      caption: '최근 수집에서 새로 저장된 논문 수',
       tone: '#4d8fcb',
     },
     {
-      label: '수록 연도',
-      value: yearValues.length ? `${Math.min(...yearValues)}–${Math.max(...yearValues)}` : '—',
-      caption: '내 수집 목록의 발행 연도 범위',
+      label: '중복 Skip',
+      value: collectionSummary.skipped != null ? formatCompact(collectionSummary.skipped) : '—',
+      caption: '최근 수집에서 중복으로 건너뛴 논문 수',
       tone: '#d9778b',
     },
     {
@@ -149,6 +200,8 @@ export function OverviewPage() {
     try {
       await api.delete('/overview/records');
       setNotice('내 수집 목록과 수집 이력이 초기화되었습니다.');
+      setCollectionSummary(emptyCollectionSummary);
+      window.localStorage.removeItem(lastCollectionKey);
       window.dispatchEvent(new CustomEvent('pubmed-records-changed'));
       window.dispatchEvent(new CustomEvent('papers-collected'));
     } catch (err) {
