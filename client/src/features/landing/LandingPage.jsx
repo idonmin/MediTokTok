@@ -2,14 +2,12 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
-  CircleUserRound,
-  LogIn,
-  LogOut,
   MessageSquareText,
   ShieldCheck,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { ProfileMenu } from '../auth/ProfileMenu.jsx';
 import { useAuth } from '../auth/auth-context.js';
 
 const navigation = [
@@ -20,29 +18,8 @@ const navigation = [
 
 export function LandingPage() {
   const location = useLocation();
-  const { authError, configured, loading, session, signIn, signOut, user } = useAuth();
+  const { authError, configured, loading, session, signIn } = useAuth();
   const [status, setStatus] = useState('');
-  const profileMenuRef = useRef(null);
-  const profileName = user?.user_metadata?.full_name || user?.user_metadata?.name || '메디톡톡 사용자';
-
-  useEffect(() => {
-    const closeWhenClickingOutside = (event) => {
-      const menu = profileMenuRef.current;
-      if (menu?.open && !menu.contains(event.target)) menu.open = false;
-    };
-    const closeWithEscape = (event) => {
-      if (event.key === 'Escape' && profileMenuRef.current?.open) {
-        profileMenuRef.current.open = false;
-        profileMenuRef.current.querySelector('summary')?.focus();
-      }
-    };
-    document.addEventListener('pointerdown', closeWhenClickingOutside);
-    document.addEventListener('keydown', closeWithEscape);
-    return () => {
-      document.removeEventListener('pointerdown', closeWhenClickingOutside);
-      document.removeEventListener('keydown', closeWithEscape);
-    };
-  }, []);
 
   const enter = async () => {
     if (session) return;
@@ -65,27 +42,7 @@ export function LandingPage() {
             </Link>
           ))}
         </div>
-        <details className="profile-menu" ref={profileMenuRef}>
-          <summary aria-label="사용자 프로필 보기" title="사용자 프로필">
-            <CircleUserRound size={22} />
-          </summary>
-          <div className="profile-popover">
-            <div className="profile-avatar"><CircleUserRound size={30} /></div>
-            {user ? (
-              <>
-                <strong>{profileName}</strong>
-                <span>{user.email}</span>
-                <button className="profile-action" type="button" onClick={signOut}><LogOut size={16} />로그아웃</button>
-              </>
-            ) : (
-              <>
-                <strong>로그인이 필요합니다</strong>
-                <span>Google 계정으로 로그인하면 모든 메뉴를 이용할 수 있습니다.</span>
-                <button className="profile-action" type="button" onClick={enter} disabled={loading}><LogIn size={16} />Google로 로그인</button>
-              </>
-            )}
-          </div>
-        </details>
+        <ProfileMenu onSignIn={enter} />
       </nav>
 
       <div className="landing-content">
