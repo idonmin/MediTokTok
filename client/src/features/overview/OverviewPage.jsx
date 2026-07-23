@@ -115,7 +115,7 @@ export function OverviewPage() {
     {
       label: '전체 논문',
       value: formatCompact(overview.totalPapers),
-      caption: 'DB에 저장된 논문 수',
+      caption: '내 수집 목록의 논문 수',
       tone: '#6f58c9',
     },
     {
@@ -140,7 +140,7 @@ export function OverviewPage() {
   const journalChartHeight = Math.max(260, overview.journals.length * 42 + 24);
 
   const handleReset = async () => {
-    const confirmed = window.confirm('현재 사용자 기준으로 저장된 논문과 수집 이력을 초기화할까요?');
+    const confirmed = window.confirm('내 수집 목록과 수집 이력을 초기화할까요? 공용 논문 메타데이터는 삭제되지 않습니다.');
     if (!confirmed) return;
 
     setClearing(true);
@@ -148,7 +148,7 @@ export function OverviewPage() {
     setNotice('');
     try {
       await api.delete('/overview/records');
-      setNotice('저장된 논문 데이터가 초기화되었습니다.');
+      setNotice('내 수집 목록과 수집 이력이 초기화되었습니다.');
       window.dispatchEvent(new CustomEvent('pubmed-records-changed'));
       window.dispatchEvent(new CustomEvent('papers-collected'));
     } catch (err) {

@@ -1,7 +1,7 @@
 import { requireDatabase } from '../../lib/supabase.js';
 import { fetchPaperMetadata, searchPmids } from '../../lib/pubmed.js';
 
-function dedupeByPmid(papers) {
+export function dedupeByPmid(papers) {
   const seen = new Set();
   return papers.filter((paper) => {
     if (!paper.pmid || seen.has(paper.pmid)) return false;
@@ -10,36 +10,40 @@ function dedupeByPmid(papers) {
   });
 }
 
+export function buildCollectionRecords(papers, insertedLinks) {
+  const insertedPmids = new Set((insertedLinks || []).map((link) => link.pmid));
+  return papers.map((paper) => ({
+    ...paper,
+    wasInserted: insertedPmids.has(paper.pmid),
+  }));
+}
+
 export async function collectAndSavePapers(conditions, userId) {
   const database = requireDatabase();
   const pmids = await searchPmids(conditions);
   const papers = dedupeByPmid(await fetchPaperMetadata(pmids));
   if (!papers.length) return { found: 0, inserted: 0, skipped: 0, records: [] };
 
-  const { data: existing, error: selectError } = await database
+  const { error: metadataError } = await database
     .from('pubmed_records')
-    .select('pmid')
-    .in('pmid', papers.map((paper) => paper.pmid));
-  if (selectError) throw selectError;
+    .upsert(papers, { onConflict: 'pmid', ignoreDuplicates: true });
+  if (metadataError) throw metadataError;
 
-  const existingPmids = new Set((existing || []).map((paper) => paper.pmid));
-  const records = papers.map((paper) => ({
-    ...paper,
-    wasInserted: !existingPmids.has(paper.pmid),
-  }));
-  const newPapers = records
-    .filter((paper) => paper.wasInserted)
-    .map(({ wasInserted, ...paper }) => ({ ...paper, collected_by: userId }));
+  const links = papers.map((paper) => ({ user_id: userId, pmid: paper.pmid }));
+  const { data: insertedLinks, error: linkError } = await database
+    .from('user_papers')
+    .upsert(links, { onConflict: 'user_id,pmid', ignoreDuplicates: true })
+    .select('pmid');
+  if (linkError) throw linkError;
 
-  if (newPapers.length) {
-    const { error: insertError } = await database
-      .from('pubmed_records')
-      .upsert(newPapers, { onConflict: 'pmid', ignoreDuplicates: true });
-    if (insertError) throw insertError;
-  }
-
-  const result = { found: papers.length, inserted: newPapers.length, skipped: papers.length - newPapers.length };
-  await database.from('collection_runs').insert({
+  const records = buildCollectionRecords(papers, insertedLinks);
+  const inserted = records.filter((paper) => paper.wasInserted).length;
+  const result = {
+    found: papers.length,
+    inserted,
+    skipped: papers.length - inserted,
+  };
+  const { error: runError } = await database.from('collection_runs').insert({
     user_id: userId,
     keyword: conditions.keyword,
     start_year: conditions.startYear,
@@ -47,5 +51,6 @@ export async function collectAndSavePapers(conditions, userId) {
     limit: conditions.limit,
     ...result,
   });
+  if (runError) throw runError;
   return { ...result, records };
 }
