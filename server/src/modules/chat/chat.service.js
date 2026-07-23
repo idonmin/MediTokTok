@@ -2,19 +2,52 @@ import { env } from '../../config/env.js';
 import { requireOpenAI } from '../../lib/openai.js';
 import { requireDatabase } from '../../lib/supabase.js';
 
-export async function loadConversation(userId, conversationId) {
+export async function listConversations(userId) {
   const database = requireDatabase();
-  const { data, error } = await database.from('chat_messages').select('role,content').eq('user_id', userId).eq('conversation_id', conversationId).order('created_at');
+  const { data, error } = await database
+    .from('chat_conversations')
+    .select('id,title,created_at,updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .limit(20);
   if (error) throw error;
   return data || [];
 }
 
-export async function ensureConversation(userId, conversationId) {
+export async function loadConversation(userId, conversationId) {
   const database = requireDatabase();
-  const { error } = await database.from('chat_conversations').upsert(
-    { id: conversationId, user_id: userId },
-    { onConflict: 'id', ignoreDuplicates: true },
-  );
+  const { data, error } = await database
+    .from('chat_messages')
+    .select('id,role,content,created_at')
+    .eq('user_id', userId)
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return (data || []).reverse();
+}
+
+export async function ensureConversation(userId, conversationId, firstMessage) {
+  const database = requireDatabase();
+  const { data: existing, error: selectError } = await database
+    .from('chat_conversations')
+    .select('user_id')
+    .eq('id', conversationId)
+    .maybeSingle();
+  if (selectError) throw selectError;
+  if (existing && existing.user_id !== userId) {
+    const error = new Error('대화를 찾을 수 없습니다.');
+    error.status = 404;
+    throw error;
+  }
+  if (existing) return;
+
+  const title = firstMessage.replace(/\s+/g, ' ').trim().slice(0, 60) || '새 대화';
+  const { error } = await database.from('chat_conversations').insert({
+    id: conversationId,
+    user_id: userId,
+    title,
+  });
   if (error) throw error;
 }
 
@@ -22,6 +55,12 @@ export async function saveMessage({ userId, conversationId, role, content }) {
   const database = requireDatabase();
   const { error } = await database.from('chat_messages').insert({ user_id: userId, conversation_id: conversationId, role, content });
   if (error) throw error;
+  const { error: updateError } = await database
+    .from('chat_conversations')
+    .update({ updated_at: new Date().toISOString() })
+    .eq('id', conversationId)
+    .eq('user_id', userId);
+  if (updateError) throw updateError;
 }
 
 export async function createChatStream(messages) {

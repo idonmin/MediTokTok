@@ -6,7 +6,7 @@ export function ProtectedRoute() {
   const location = useLocation();
 
   if (loading) return <main className="center-page">로그인 정보를 확인하는 중입니다.</main>;
-  if (!configured) return <Outlet />;
+  if (!configured) return <Navigate to="/" state={{ setupRequired: true }} replace />;
   if (!session) return <Navigate to="/" state={{ from: location }} replace />;
   return <Outlet />;
 }

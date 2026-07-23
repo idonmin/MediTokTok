@@ -1,13 +1,20 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from './auth-context.js';
 
 export function AuthCallbackPage() {
-  const navigate = useNavigate();
+  const { authError, configured, loading, session } = useAuth();
+  const providerError = new URLSearchParams(window.location.search).get('error_description');
 
   useEffect(() => {
-    const timer = window.setTimeout(() => navigate('/app/overview', { replace: true }), 600);
-    return () => window.clearTimeout(timer);
-  }, [navigate]);
+    if (!session) return;
+    const storedPath = sessionStorage.getItem('authReturnTo') || '/app/overview';
+    const returnTo = storedPath.startsWith('/app/') ? storedPath : '/app/overview';
+    sessionStorage.removeItem('authReturnTo');
+    window.location.replace(returnTo);
+  }, [session]);
 
+  if (!configured) return <main className="center-page">Supabase 로그인 설정이 필요합니다.</main>;
+  if (providerError || authError) return <main className="center-page">로그인에 실패했습니다: {providerError || authError}</main>;
+  if (!loading && !session) return <main className="center-page">로그인 세션을 확인하지 못했습니다. 다시 로그인해 주세요.</main>;
   return <main className="center-page">로그인을 완료하는 중입니다.</main>;
 }

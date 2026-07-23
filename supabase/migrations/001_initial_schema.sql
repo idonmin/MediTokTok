@@ -55,4 +55,14 @@ create policy "users can read own collection runs" on public.collection_runs for
 create policy "users manage own conversations" on public.chat_conversations for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "users manage own messages" on public.chat_messages for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+grant usage on schema public to authenticated, service_role;
+grant select on public.pubmed_records to authenticated;
+grant select on public.collection_runs to authenticated;
+grant select, insert, update, delete on public.chat_conversations to authenticated;
+grant select, insert, update, delete on public.chat_messages to authenticated;
+grant all privileges on public.pubmed_records to service_role;
+grant all privileges on public.collection_runs to service_role;
+grant all privileges on public.chat_conversations to service_role;
+grant all privileges on public.chat_messages to service_role;
+
 -- INSERT/UPDATE는 service role을 사용하는 Express 서버에서만 수행합니다.
