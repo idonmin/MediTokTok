@@ -138,13 +138,9 @@ export function CollectionPanel() {
               <li key={record.pmid} className="collection-record-item">
                 <div className="record-topline">
                   <span
-                    className={
-                      record.wasInserted
-                        ? "record-badge new"
-                        : "record-badge existing"
-                    }
+                    className={record.wasInserted ? "record-badge new" : "record-badge existing"}
                   >
-                    {record.wasInserted ? "새로 저장됨" : "이미 저장됨"}
+                    {record.wasInserted ? "내 목록에 추가됨" : "이미 내 목록에 있음"}
                   </span>
                   <span className="record-pmid">PMID {record.pmid}</span>
                 </div>
