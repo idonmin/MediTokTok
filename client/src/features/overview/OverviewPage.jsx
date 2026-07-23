@@ -71,7 +71,6 @@ export function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [refreshKey, setRefreshKey] = useState(0);
   const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
@@ -83,7 +82,11 @@ export function OverviewPage() {
       try {
         const data = await api.get('/overview');
         if (!active) return;
-        setOverview({ ...emptyOverview, ...data });
+        setOverview({
+          ...emptyOverview,
+          ...data,
+          latestRun: data.latestRun || null,
+        });
       } catch (err) {
         if (!active) return;
         setError(err.message || '개요를 불러오지 못했습니다.');
@@ -93,17 +96,19 @@ export function OverviewPage() {
     };
 
     const refresh = () => {
-      setRefreshKey((value) => value + 1);
+      void loadOverview();
     };
 
     void loadOverview();
     window.addEventListener('papers-collected', refresh);
+    window.addEventListener('pubmed-records-changed', refresh);
 
     return () => {
       active = false;
       window.removeEventListener('papers-collected', refresh);
+      window.removeEventListener('pubmed-records-changed', refresh);
     };
-  }, [refreshKey]);
+  }, []);
 
   const latestRun = overview.latestRun;
   const summaryCards = [
@@ -144,7 +149,8 @@ export function OverviewPage() {
     try {
       await api.delete('/overview/records');
       setNotice('저장된 논문 데이터가 초기화되었습니다.');
-      setRefreshKey((value) => value + 1);
+      window.dispatchEvent(new CustomEvent('pubmed-records-changed'));
+      window.dispatchEvent(new CustomEvent('papers-collected'));
     } catch (err) {
       setError(err.message || '초기화에 실패했습니다.');
     } finally {

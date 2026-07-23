@@ -1,6 +1,6 @@
-import { BarChart3, BookOpen, LogOut, MessageSquareText } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { useAuth } from '../features/auth/auth-context.js';
+import { BarChart3, BookOpen, MessageSquareText } from 'lucide-react';
+import { Link, NavLink, Outlet } from 'react-router-dom';
+import { ProfileMenu } from '../features/auth/ProfileMenu.jsx';
 import { CollectionPanel } from '../features/collection/CollectionPanel.jsx';
 
 const links = [
@@ -10,16 +10,11 @@ const links = [
 ];
 
 export function DashboardLayout() {
-  const { user, signOut } = useAuth();
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">메디톡톡</div>
+        <Link className="brand" to="/" aria-label="랜딩페이지로 이동">메디톡톡</Link>
         <CollectionPanel />
-        <div className="sidebar-user">
-          <span>{user?.email || '개발용 데모 사용자'}</span>
-          {user && <button className="icon-button" onClick={signOut} aria-label="로그아웃"><LogOut size={17} /></button>}
-        </div>
       </aside>
       <main className="workspace">
         <header className="workspace-header">
@@ -28,6 +23,7 @@ export function DashboardLayout() {
               <NavLink key={to} to={to}><Icon size={17} />{label}</NavLink>
             ))}
           </nav>
+          <ProfileMenu />
         </header>
         <Outlet />
       </main>

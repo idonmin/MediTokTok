@@ -18,7 +18,7 @@ cp server/.env.example server/.env
 npm run dev
 ```
 
-`client/.env`와 `server/.env`에는 각 폴더에 필요한 항목만 남기고 실제 값을 입력합니다. Supabase SQL Editor에서 `supabase/migrations/001_initial_schema.sql`을 한 번 실행한 뒤 Google Provider와 Redirect URL을 설정합니다.
+환경변수는 루트 `.env` 또는 `client/.env`와 `server/.env`에 설정할 수 있습니다. Supabase SQL Editor에서 `supabase/migrations`의 SQL 파일을 번호 순서대로 실행한 뒤 Google Provider와 Redirect URL을 설정합니다. 기존에 `001_initial_schema.sql`만 실행했다면 `002_api_role_permissions.sql`을 추가로 실행합니다.
 
 - Client: http://localhost:5173
 - Server health: http://localhost:4000/api/health

@@ -22,6 +22,6 @@
 - Site URL을 배포된 클라이언트 주소로 변경
 - Redirect URL에 `https://클라이언트주소/auth/callback` 추가
 - Google Cloud Console의 Authorized redirect URI와 Supabase 안내 URI 일치 확인
-- `supabase/migrations/001_initial_schema.sql`을 한 번 실행하고 RLS 활성화 확인
+- `supabase/migrations`의 SQL 파일을 번호 순서대로 실행하고 RLS 및 API 역할 권한 확인
 
 호스팅 플랫폼이 정해지면 해당 플랫폼 설정 파일은 배포 담당 브랜치에서 추가합니다.

@@ -1,4 +1,10 @@
-import 'dotenv/config';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
+
+const configDirectory = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(configDirectory, '../../../.env'), quiet: true });
+dotenv.config({ path: resolve(configDirectory, '../../.env'), override: true, quiet: true });
 
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
