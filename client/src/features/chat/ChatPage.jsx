@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
+import { BrandMark } from '../../components/BrandMark.jsx';
 import { getConversationMessages, getConversations, streamChat } from './chat.api.js';
 
 const greeting = {
@@ -92,7 +93,9 @@ export function ChatPage() {
         <div className="message-list" ref={messageListRef} onScroll={handleScroll}>
           {messages.map((message) => (
             <article key={message.id} className={`message ${message.role}`}>
-              <span>{message.role === 'user' ? '나' : '메디톡톡'}</span>
+              <span className="message-author">
+                {message.role === 'user' ? '나' : <><BrandMark small />메디톡톡</>}
+              </span>
               <p>{message.content || '답변을 작성하는 중…'}</p>
             </article>
           ))}
